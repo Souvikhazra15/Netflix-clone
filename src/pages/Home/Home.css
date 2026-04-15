@@ -1,3 +1,9 @@
-h1{
-  color: white;
+.hero{
+  position: relative;
+}
+
+.banner-img{
+  width: 100%;
+  mask-image: linear-gradient(to right, transparent, black 75%);
+  -webkit-mask-image: linear-gradient(to right, transparent, black 75%);
 }
