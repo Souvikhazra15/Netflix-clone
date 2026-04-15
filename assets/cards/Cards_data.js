@@ -60,7 +60,7 @@ const cards_data = [
     },
     {
         image:card_img12,
-        name:"Mission Ganj"
+        name:"Mission Raniganj"
     },
     {
         image:card_img13,
