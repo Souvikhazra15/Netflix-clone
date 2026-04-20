@@ -21,8 +21,102 @@
   border-radius: 4px;
 }
 
+.home-description-section {
+  margin-top: 42px;
+}
+
+.home-description-section h2 {
+  font-size: clamp(22px, 3vw, 34px);
+  margin-bottom: 8px;
+}
+
+.home-description-subtitle {
+  color: rgba(255, 255, 255, 0.74);
+  margin-bottom: 20px;
+  font-size: 15px;
+}
+
+.home-description-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  gap: 14px;
+}
+
+.home-description-card {
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.01));
+  border-radius: 10px;
+  padding: 16px;
+  min-height: 210px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.home-description-card__category {
+  width: fit-content;
+  background: rgba(229, 9, 20, 0.2);
+  border: 1px solid rgba(229, 9, 20, 0.45);
+  color: #ffd6d6;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 4px 10px;
+}
+
+.home-description-card h3 {
+  font-size: 20px;
+  line-height: 1.2;
+}
+
+.home-description-card p {
+  color: rgba(255, 255, 255, 0.86);
+  line-height: 1.45;
+  font-size: 14px;
+}
+
+.home-description-card a {
+  margin-top: auto;
+  width: fit-content;
+  text-decoration: none;
+  color: #fff;
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 6px;
+  padding: 8px 10px;
+  font-size: 13px;
+  font-weight: 600;
+  transition: transform 180ms ease, background-color 180ms ease;
+}
+
+.home-description-card a:hover {
+  transform: translateY(-1px);
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.home-description-card--skeleton {
+  min-height: 210px;
+  background: linear-gradient(95deg, #262626 20%, #3a3a3a 50%, #262626 80%);
+  background-size: 200% 100%;
+  border: 0;
+  animation: homeCardShimmer 1.2s infinite linear;
+}
+
+@keyframes homeCardShimmer {
+  from {
+    background-position: 200% 0;
+  }
+  to {
+    background-position: -200% 0;
+  }
+}
+
 @media (max-width: 768px) {
   .home-content {
     padding: 0 4% 24px;
+  }
+
+  .home-description-section {
+    margin-top: 26px;
   }
 }
