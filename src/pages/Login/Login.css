@@ -56,6 +56,11 @@
     cursor: pointer;
 }
 
+.login-form button:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+}
+
 .form-help {
     display: flex;
     justify-content: space-between;

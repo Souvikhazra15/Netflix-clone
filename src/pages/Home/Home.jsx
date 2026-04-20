@@ -46,7 +46,7 @@ const titleMetadata = {
   Lupin: { type: 'series', language: 'French', isNewPopular: true, inMyList: false }
 };
 
-const Home = () => {
+const Home = ({ onLogout }) => {
   const { content, featuredContent, isLoading, error } = useContent();
   const [activeNav, setActiveNav] = useState(navFilters.HOME);
   const [searchQuery, setSearchQuery] = useState('');
@@ -136,6 +136,7 @@ const Home = () => {
         availableLanguages={availableLanguages}
         selectedLanguage={selectedLanguage}
         onLanguageChange={setSelectedLanguage}
+        onLogout={onLogout}
       />
       <Banner item={dynamicFeatured} />
 

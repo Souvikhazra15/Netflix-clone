@@ -21,7 +21,8 @@ const Navbar = ({
   onSearchChange,
   availableLanguages,
   selectedLanguage,
-  onLanguageChange
+  onLanguageChange,
+  onLogout
 }) => {
   const [isSolid, setIsSolid] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
@@ -144,7 +145,7 @@ const Navbar = ({
             <div className='dropdown'>
               <p>Manage Profiles</p>
               <p>Account</p>
-              <p>Sign out of Netflix</p>
+              <p onClick={onLogout} style={{ cursor: 'pointer' }}>Sign out of Netflix</p>
             </div>
           )}
         </div>
@@ -174,7 +175,8 @@ Navbar.defaultProps = {
   onSearchChange: () => {},
   availableLanguages: ['All Languages'],
   selectedLanguage: 'All Languages',
-  onLanguageChange: () => {}
+  onLanguageChange: () => {},
+  onLogout: () => {}
 };
 
 export default Navbar;
