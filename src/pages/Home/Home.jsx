@@ -11,7 +11,7 @@ const loadingRows = [
   'Popular on Netflix',
   'Only on Netflix',
   'Action Hits',
-  'Sci-Fi & Mystery'
+  'Top Picks for You'
 ];
 
 const Home = () => {

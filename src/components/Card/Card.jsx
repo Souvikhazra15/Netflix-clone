@@ -1,5 +1,6 @@
 import React from 'react';
 import './Card.css';
+import fallbackPoster from '../../../assets/cards/card1.jpg';
 
 const Card = ({ item }) => {
   return (
@@ -10,7 +11,15 @@ const Card = ({ item }) => {
       rel="noopener noreferrer"
       aria-label={`Watch trailer: ${item.title}`}
     >
-      <img src={item.thumbnailUrl} alt={item.title} loading="lazy" />
+      <img
+        src={item.thumbnailUrl}
+        alt={item.title}
+        loading="lazy"
+        onError={(event) => {
+          event.currentTarget.onerror = null;
+          event.currentTarget.src = fallbackPoster;
+        }}
+      />
       <span className="content-card__title">{item.title}</span>
     </a>
   );
