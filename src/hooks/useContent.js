@@ -4,7 +4,7 @@ import contentData from '../data/contentData';
 const TMDB_API_BASE = 'https://api.themoviedb.org/3';
 const TMDB_IMAGE_BASE = 'https://image.tmdb.org/t/p/w780';
 
-const tmdbRows = [
+const tmdbRows = [  
   { category: 'Trending Now', endpoint: '/trending/all/week' },
   { category: 'Popular on Netflix', endpoint: '/movie/popular' },
   { category: 'Only on Netflix', endpoint: '/tv/popular' },
