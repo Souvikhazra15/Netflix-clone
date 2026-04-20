@@ -1,0 +1,28 @@
+[
+  {
+    "_id": "ad1638eb-7c7a-4534-9da7-7c1bf20c7a31",
+    "username": "testuser",
+    "email": "testuser@example.com",
+    "passwordHash": "$2b$10$MtqIFQ9RmzJlzH5N7cbdye94HNBbdLls7lvvEI7a.K9LyQ7/1EQC.",
+    "isActive": true,
+    "createdAt": "2026-04-20T15:18:20.356Z",
+    "updatedAt": "2026-04-20T15:18:20.356Z",
+    "lastSignInAt": "2026-04-20T15:18:20.356Z",
+    "lastSignOutAt": null,
+    "lastLoginAt": "2026-04-20T15:18:20.356Z",
+    "lastLogoutAt": null
+  },
+  {
+    "_id": "1c0d740a-6016-4c7a-b59f-53306c17478b",
+    "username": "souvik_10",
+    "email": "souvikhazra@gmail.com",
+    "passwordHash": "$2b$10$11QxTBoEJHEkTKxc38nsVO47amTGNEaGj65S/Mf1J4MnqLEnr3BGy",
+    "isActive": true,
+    "createdAt": "2026-04-20T15:18:58.332Z",
+    "updatedAt": "2026-04-20T15:22:18.966Z",
+    "lastSignInAt": "2026-04-20T15:22:18.966Z",
+    "lastSignOutAt": "2026-04-20T15:21:36.889Z",
+    "lastLoginAt": "2026-04-20T15:22:18.966Z",
+    "lastLogoutAt": "2026-04-20T15:21:36.889Z"
+  }
+]

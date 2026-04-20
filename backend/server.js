@@ -4,6 +4,8 @@ import dotenv from 'dotenv';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import { ObjectId } from 'mongodb';
+import { randomUUID } from 'node:crypto';
+import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { connectDB, getDB } from './db.js';
 
 dotenv.config();
@@ -11,6 +13,10 @@ dotenv.config();
 const app = express();
 const port = Number(process.env.PORT || 5000);
 const jwtSecret = process.env.JWT_SECRET;
+let useFileStore = false;
+
+const usersFilePath = new URL('./data/users.json', import.meta.url);
+const eventsFilePath = new URL('./data/auth_events.json', import.meta.url);
 
 if (!jwtSecret) {
   throw new Error('JWT_SECRET is missing in backend/.env');
@@ -23,6 +29,32 @@ app.use(
   })
 );
 app.use(express.json());
+
+const ensureFileStore = async () => {
+  await mkdir(new URL('./data/', import.meta.url), { recursive: true });
+
+  for (const fileUrl of [usersFilePath, eventsFilePath]) {
+    try {
+      await readFile(fileUrl, 'utf8');
+    } catch {
+      await writeFile(fileUrl, '[]', 'utf8');
+    }
+  }
+};
+
+const readJsonArray = async (fileUrl) => {
+  try {
+    const raw = await readFile(fileUrl, 'utf8');
+    const parsed = JSON.parse(raw || '[]');
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+};
+
+const writeJsonArray = async (fileUrl, items) => {
+  await writeFile(fileUrl, JSON.stringify(items, null, 2), 'utf8');
+};
 
 const getClientIp = (req) => {
   const forwardedFor = req.headers['x-forwarded-for'];
@@ -91,6 +123,86 @@ const createToken = (user) => {
   );
 };
 
+const toUserIdString = (id) => (typeof id === 'string' ? id : id.toString());
+
+const findUserByEmail = async (email) => {
+  if (useFileStore) {
+    const users = await readJsonArray(usersFilePath);
+    return users.find((user) => user.email === email) || null;
+  }
+
+  const db = getDB();
+  return db.collection('users').findOne({ email });
+};
+
+const insertUserRecord = async (payload) => {
+  if (useFileStore) {
+    const users = await readJsonArray(usersFilePath);
+    const user = {
+      _id: randomUUID(),
+      ...payload
+    };
+    users.push(user);
+    await writeJsonArray(usersFilePath, users);
+    return user;
+  }
+
+  const db = getDB();
+  const result = await db.collection('users').insertOne(payload);
+  return { _id: result.insertedId, ...payload };
+};
+
+const updateUserById = async (userId, updateFields) => {
+  if (useFileStore) {
+    const users = await readJsonArray(usersFilePath);
+    const nextUsers = users.map((user) =>
+      toUserIdString(user._id) === toUserIdString(userId)
+        ? { ...user, ...updateFields }
+        : user
+    );
+    await writeJsonArray(usersFilePath, nextUsers);
+    return;
+  }
+
+  const db = getDB();
+  await db.collection('users').updateOne(
+    { _id: new ObjectId(toUserIdString(userId)) },
+    {
+      $set: updateFields
+    }
+  );
+};
+
+const findUserById = async (userId) => {
+  if (useFileStore) {
+    const users = await readJsonArray(usersFilePath);
+    return users.find((user) => toUserIdString(user._id) === toUserIdString(userId)) || null;
+  }
+
+  const db = getDB();
+  return db.collection('users').findOne(
+    { _id: new ObjectId(toUserIdString(userId)) },
+    {
+      projection: {
+        passwordHash: 0
+      }
+    }
+  );
+};
+
+const findEventsByEmail = async (email, limit = 50) => {
+  if (useFileStore) {
+    const events = await readJsonArray(eventsFilePath);
+    return events
+      .filter((event) => event.email === email)
+      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+      .slice(0, limit);
+  }
+
+  const db = getDB();
+  return db.collection('auth_events').find({ email }).sort({ createdAt: -1 }).limit(limit).toArray();
+};
+
 const authRequired = (req, res, next) => {
   const authHeader = req.headers.authorization || '';
   const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : '';
@@ -109,16 +221,35 @@ const authRequired = (req, res, next) => {
 };
 
 const writeAuthEvent = async ({ userId, email, eventType, action, ipAddress, location, userAgent }) => {
+  const createdAt = new Date();
+
+  if (useFileStore) {
+    const events = await readJsonArray(eventsFilePath);
+    events.push({
+      _id: randomUUID(),
+      userId: toUserIdString(userId),
+      email,
+      eventType,
+      action,
+      ipAddress,
+      location,
+      userAgent,
+      createdAt
+    });
+    await writeJsonArray(eventsFilePath, events);
+    return;
+  }
+
   const db = getDB();
   await db.collection('auth_events').insertOne({
-    userId: new ObjectId(userId),
+    userId: new ObjectId(toUserIdString(userId)),
     email,
     eventType,
     action,
     ipAddress,
     location,
     userAgent,
-    createdAt: new Date()
+    createdAt
   });
 };
 
@@ -131,9 +262,7 @@ const handleSignIn = async (req, res) => {
     }
 
     const normalizedEmail = String(email).trim().toLowerCase();
-    const db = getDB();
-
-    const user = await db.collection('users').findOne({ email: normalizedEmail });
+    const user = await findUserByEmail(normalizedEmail);
     if (!user) {
       return res.status(401).json({ message: 'Invalid email or password' });
     }
@@ -144,17 +273,12 @@ const handleSignIn = async (req, res) => {
     }
 
     const now = new Date();
-    await db.collection('users').updateOne(
-      { _id: user._id },
-      {
-        $set: {
-          isActive: true,
-          updatedAt: now,
-          lastSignInAt: now,
-          lastLoginAt: now
-        }
-      }
-    );
+    await updateUserById(user._id, {
+      isActive: true,
+      updatedAt: now,
+      lastSignInAt: now,
+      lastLoginAt: now
+    });
 
     const ipAddress = getClientIp(req);
     const location = await resolveLocation(ipAddress);
@@ -188,21 +312,15 @@ const handleSignIn = async (req, res) => {
 
 const handleSignOut = async (req, res) => {
   try {
-    const db = getDB();
     const userId = req.user.userId;
     const now = new Date();
 
-    await db.collection('users').updateOne(
-      { _id: new ObjectId(userId) },
-      {
-        $set: {
-          isActive: false,
-          updatedAt: now,
-          lastSignOutAt: now,
-          lastLogoutAt: now
-        }
-      }
-    );
+    await updateUserById(userId, {
+      isActive: false,
+      updatedAt: now,
+      lastSignOutAt: now,
+      lastLogoutAt: now
+    });
 
     const ipAddress = getClientIp(req);
     const location = await resolveLocation(ipAddress);
@@ -240,9 +358,7 @@ app.post('/api/auth/sign-up', async (req, res) => {
     }
 
     const normalizedEmail = String(email).trim().toLowerCase();
-    const db = getDB();
-
-    const existingUser = await db.collection('users').findOne({ email: normalizedEmail });
+    const existingUser = await findUserByEmail(normalizedEmail);
     if (existingUser) {
       return res.status(409).json({ message: 'Email is already registered' });
     }
@@ -250,7 +366,7 @@ app.post('/api/auth/sign-up', async (req, res) => {
     const passwordHash = await bcrypt.hash(password, 10);
     const now = new Date();
 
-    const result = await db.collection('users').insertOne({
+    const user = await insertUserRecord({
       username: String(username).trim(),
       email: normalizedEmail,
       passwordHash,
@@ -263,7 +379,7 @@ app.post('/api/auth/sign-up', async (req, res) => {
       lastLogoutAt: null
     });
 
-    const userId = result.insertedId;
+    const userId = user._id;
     const ipAddress = getClientIp(req);
     const location = await resolveLocation(ipAddress);
 
@@ -276,12 +392,6 @@ app.post('/api/auth/sign-up', async (req, res) => {
       location,
       userAgent: req.headers['user-agent'] || 'unknown'
     });
-
-    const user = {
-      _id: userId,
-      username: String(username).trim(),
-      email: normalizedEmail
-    };
 
     const token = createToken(user);
 
@@ -310,15 +420,7 @@ app.post('/api/auth/logout', authRequired, handleSignOut);
 
 app.get('/api/auth/me', authRequired, async (req, res) => {
   try {
-    const db = getDB();
-    const user = await db.collection('users').findOne(
-      { _id: new ObjectId(req.user.userId) },
-      {
-        projection: {
-          passwordHash: 0
-        }
-      }
-    );
+    const user = await findUserById(req.user.userId);
 
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
@@ -347,13 +449,7 @@ app.get('/api/auth/activity/:email', async (req, res) => {
       return res.status(400).json({ message: 'email param is required' });
     }
 
-    const db = getDB();
-    const events = await db
-      .collection('auth_events')
-      .find({ email })
-      .sort({ createdAt: -1 })
-      .limit(50)
-      .toArray();
+    const events = await findEventsByEmail(email, 50);
 
     return res.json({
       email,
@@ -376,13 +472,16 @@ app.get('/api/auth/activity/:email', async (req, res) => {
 const startServer = async () => {
   try {
     await connectDB();
-    app.listen(port, () => {
-      console.log(`Backend listening on http://localhost:${port}`);
-    });
+    console.log('Connected to MongoDB Atlas');
   } catch (error) {
-    console.error('Server startup failed:', error.message);
-    process.exit(1);
+    useFileStore = true;
+    await ensureFileStore();
+    console.warn(`Atlas unavailable (${error.message}). Using local JSON datastore.`);
   }
+
+  app.listen(port, () => {
+    console.log(`Backend listening on http://localhost:${port}`);
+  });
 };
 
 startServer();

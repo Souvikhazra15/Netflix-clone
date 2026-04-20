@@ -1,0 +1,70 @@
+[
+  {
+    "_id": "31ae6fb0-4139-4bce-b873-3263cb2e214c",
+    "userId": "ad1638eb-7c7a-4534-9da7-7c1bf20c7a31",
+    "email": "testuser@example.com",
+    "eventType": "sign_in",
+    "action": "login",
+    "ipAddress": "::1",
+    "location": {
+      "city": "Localhost",
+      "region": "Local",
+      "country": "Local",
+      "timezone": "Asia/Calcutta",
+      "source": "local"
+    },
+    "userAgent": "node",
+    "createdAt": "2026-04-20T15:18:20.398Z"
+  },
+  {
+    "_id": "bbac6d39-8413-4f97-baaf-8aff5ab256c1",
+    "userId": "1c0d740a-6016-4c7a-b59f-53306c17478b",
+    "email": "souvikhazra@gmail.com",
+    "eventType": "sign_in",
+    "action": "login",
+    "ipAddress": "::1",
+    "location": {
+      "city": "Localhost",
+      "region": "Local",
+      "country": "Local",
+      "timezone": "Asia/Calcutta",
+      "source": "local"
+    },
+    "userAgent": "Mozilla/5.0 (iPhone; CPU iPhone OS 18_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.5 Mobile/15E148 Safari/604.1",
+    "createdAt": "2026-04-20T15:18:58.335Z"
+  },
+  {
+    "_id": "66a43fed-2ed9-4345-88f9-71af8913d571",
+    "userId": "1c0d740a-6016-4c7a-b59f-53306c17478b",
+    "email": "souvikhazra@gmail.com",
+    "eventType": "sign_out",
+    "action": "logout",
+    "ipAddress": "::1",
+    "location": {
+      "city": "Localhost",
+      "region": "Local",
+      "country": "Local",
+      "timezone": "Asia/Calcutta",
+      "source": "local"
+    },
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36",
+    "createdAt": "2026-04-20T15:21:36.892Z"
+  },
+  {
+    "_id": "a01a33b3-ad42-4b6f-a805-7aa5058196cf",
+    "userId": "1c0d740a-6016-4c7a-b59f-53306c17478b",
+    "email": "souvikhazra@gmail.com",
+    "eventType": "sign_in",
+    "action": "login",
+    "ipAddress": "::1",
+    "location": {
+      "city": "Localhost",
+      "region": "Local",
+      "country": "Local",
+      "timezone": "Asia/Calcutta",
+      "source": "local"
+    },
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36",
+    "createdAt": "2026-04-20T15:22:18.968Z"
+  }
+]
