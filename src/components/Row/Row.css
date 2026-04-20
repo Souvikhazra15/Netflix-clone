@@ -15,6 +15,8 @@
   overflow-y: visible;
   scroll-behavior: smooth;
   padding: 6px 2px 10px;
+  -webkit-overflow-scrolling: touch;
+  scroll-snap-type: x proximity;
 }
 
 .content-row__track::-webkit-scrollbar {
@@ -39,6 +41,7 @@
   background: linear-gradient(95deg, #262626 20%, #3a3a3a 50%, #262626 80%);
   background-size: 200% 100%;
   animation: shimmer 1.2s infinite linear;
+  scroll-snap-align: start;
 }
 
 @keyframes shimmer {
@@ -55,9 +58,30 @@
     margin-top: 22px;
   }
 
+  .content-row h2 {
+    margin-bottom: 10px;
+  }
+
   .content-row__skeleton {
     min-width: 180px;
     width: 180px;
     height: 104px;
+  }
+}
+
+@media (max-width: 520px) {
+  .content-row {
+    margin-top: 18px;
+  }
+
+  .content-row__track {
+    gap: 8px;
+    padding: 4px 1px 8px;
+  }
+
+  .content-row__skeleton {
+    min-width: 150px;
+    width: 150px;
+    height: 92px;
   }
 }

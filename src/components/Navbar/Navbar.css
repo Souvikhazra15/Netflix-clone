@@ -107,6 +107,20 @@
 }
 
 @media (max-width: 720px) {
+    .navbar {
+        font-size: 12px;
+        padding: 12px 4%;
+    }
+
+    .navbar-left {
+        gap: 10px;
+        min-width: 0;
+    }
+
+    .navbar-left ul {
+        gap: 8px;
+    }
+
     .navbar-left ul li:nth-child(n+4),
     .navbar-right p,
     .navbar-right .icons:first-child {
@@ -119,5 +133,21 @@
 
     .navbar-right .profile {
         width: 32px;
+    }
+}
+
+@media (max-width: 520px) {
+    .navbar-left ul li:nth-child(n+3),
+    .navbar-profile .caret {
+        display: none;
+    }
+
+    .navbar-right {
+        gap: 8px;
+    }
+
+    .navbar .dropdown {
+        right: -6px;
+        padding: 14px 16px;
     }
 }

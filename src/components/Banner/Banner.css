@@ -87,3 +87,31 @@
     flex-wrap: wrap;
   }
 }
+
+@media (max-width: 520px) {
+  .banner {
+    min-height: 62vh;
+    padding: 98px 4% 56px;
+    align-items: flex-end;
+  }
+
+  .banner__badge {
+    font-size: 10px;
+    padding: 4px 8px;
+  }
+
+  .banner__content h1 {
+    font-size: clamp(28px, 8vw, 42px);
+    margin-bottom: 10px;
+  }
+
+  .banner__content p {
+    font-size: 14px;
+    line-height: 1.35;
+  }
+
+  .banner__btn {
+    padding: 10px 14px;
+    font-size: 13px;
+  }
+}

@@ -8,6 +8,7 @@
   transition: transform 260ms ease, box-shadow 260ms ease;
   background: #151515;
   flex-shrink: 0;
+  scroll-snap-align: start;
 }
 
 .content-card img {
@@ -69,5 +70,28 @@
 
   .content-card img {
     height: 104px;
+  }
+}
+
+@media (max-width: 520px) {
+  .content-card {
+    min-width: 150px;
+    width: 150px;
+    border-radius: 5px;
+  }
+
+  .content-card img {
+    height: 92px;
+  }
+
+  .content-card__title {
+    font-size: 12px;
+    left: 8px;
+    right: 8px;
+    bottom: 8px;
+  }
+
+  .content-card:hover {
+    transform: scale(1.03);
   }
 }
