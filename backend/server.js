@@ -13,7 +13,10 @@ dotenv.config();
 const app = express();
 const port = Number(process.env.PORT || 5000);
 const jwtSecret = process.env.JWT_SECRET;
+const isVercel = process.env.VERCEL === '1';
 let useFileStore = false;
+let initialized = false;
+let initializePromise;
 
 const usersFilePath = new URL('./data/users.json', import.meta.url);
 const eventsFilePath = new URL('./data/auth_events.json', import.meta.url);
@@ -253,6 +256,40 @@ const writeAuthEvent = async ({ userId, email, eventType, action, ipAddress, loc
   });
 };
 
+const initializeDataStore = async () => {
+  if (initialized) {
+    return;
+  }
+
+  if (initializePromise) {
+    await initializePromise;
+    return;
+  }
+
+  initializePromise = (async () => {
+    try {
+      await connectDB();
+      console.log('Connected to MongoDB Atlas');
+    } catch (error) {
+      useFileStore = true;
+      await ensureFileStore();
+      console.warn(`Atlas unavailable (${error.message}). Using local JSON datastore.`);
+    }
+    initialized = true;
+  })();
+
+  await initializePromise;
+};
+
+app.use(async (_req, _res, next) => {
+  try {
+    await initializeDataStore();
+    next();
+  } catch (error) {
+    next(error);
+  }
+});
+
 const handleSignIn = async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -470,18 +507,15 @@ app.get('/api/auth/activity/:email', async (req, res) => {
 });
 
 const startServer = async () => {
-  try {
-    await connectDB();
-    console.log('Connected to MongoDB Atlas');
-  } catch (error) {
-    useFileStore = true;
-    await ensureFileStore();
-    console.warn(`Atlas unavailable (${error.message}). Using local JSON datastore.`);
-  }
+  await initializeDataStore();
 
   app.listen(port, () => {
     console.log(`Backend listening on http://localhost:${port}`);
   });
 };
 
-startServer();
+if (!isVercel) {
+  startServer();
+}
+
+export default app;
