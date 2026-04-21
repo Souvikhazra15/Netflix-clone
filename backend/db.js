@@ -12,10 +12,6 @@ dns.setServers(['8.8.8.8', '1.1.1.1']);
 
 const uri = process.env.MONGODB_URI;
 
-if (!uri) {
-	throw new Error('MONGODB_URI is missing in backend/.env');
-}
-
 const baseOptions = {
 	serverSelectionTimeoutMS: 10000,
 	connectTimeoutMS: 10000,
@@ -34,6 +30,10 @@ let database;
 export const connectDB = async () => {
 	if (database) {
 		return database;
+	}
+
+	if (!uri) {
+		throw new Error('MONGODB_URI is missing');
 	}
 
 	try {

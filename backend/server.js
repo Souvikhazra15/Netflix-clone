@@ -14,7 +14,12 @@ const app = express();
 const port = Number(process.env.PORT || 5000);
 const jwtSecret = process.env.JWT_SECRET;
 const isVercel = process.env.VERCEL === '1';
-let useFileStore = false;
+const useFileStoreByEnv = ['1', 'true', 'yes', 'json', 'file'].includes(
+  String(process.env.USE_FILE_STORE || process.env.DATA_STORE || '')
+    .trim()
+    .toLowerCase()
+);
+let useFileStore = useFileStoreByEnv;
 let initialized = false;
 let initializePromise;
 
@@ -267,6 +272,14 @@ const initializeDataStore = async () => {
   }
 
   initializePromise = (async () => {
+    if (useFileStoreByEnv) {
+      useFileStore = true;
+      await ensureFileStore();
+      console.log('Using local JSON datastore (forced by env).');
+      initialized = true;
+      return;
+    }
+
     try {
       await connectDB();
       console.log('Connected to MongoDB Atlas');
