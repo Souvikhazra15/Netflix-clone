@@ -66,5 +66,73 @@
     },
     "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36",
     "createdAt": "2026-04-20T15:22:18.968Z"
+  },
+  {
+    "_id": "ae8686aa-1c0b-40f4-aaa0-2ee7db091042",
+    "userId": "98196cf3-4979-461e-a890-31671501525d",
+    "email": "user@gmail.com",
+    "eventType": "sign_in",
+    "action": "login",
+    "ipAddress": "::1",
+    "location": {
+      "city": "Localhost",
+      "region": "Local",
+      "country": "Local",
+      "timezone": "Asia/Calcutta",
+      "source": "local"
+    },
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36",
+    "createdAt": "2026-04-22T09:52:00.304Z"
+  },
+  {
+    "_id": "47356bc6-ba36-4f0a-bbf5-d7afd2e071cb",
+    "userId": "bb540f81-05a6-4761-9f31-395091554a81",
+    "email": "souvik@gmail.com",
+    "eventType": "sign_in",
+    "action": "login",
+    "ipAddress": "::1",
+    "location": {
+      "city": "Localhost",
+      "region": "Local",
+      "country": "Local",
+      "timezone": "Asia/Calcutta",
+      "source": "local"
+    },
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36",
+    "createdAt": "2026-04-29T05:31:28.771Z"
+  },
+  {
+    "_id": "6ab89ce6-da4f-4cb7-93fc-9f6fef3e7510",
+    "userId": "bb540f81-05a6-4761-9f31-395091554a81",
+    "email": "souvik@gmail.com",
+    "eventType": "sign_out",
+    "action": "logout",
+    "ipAddress": "::1",
+    "location": {
+      "city": "Localhost",
+      "region": "Local",
+      "country": "Local",
+      "timezone": "Asia/Calcutta",
+      "source": "local"
+    },
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36",
+    "createdAt": "2026-04-29T05:31:42.642Z"
+  },
+  {
+    "_id": "416779af-17aa-435f-8600-9b6486cf53e6",
+    "userId": "bb540f81-05a6-4761-9f31-395091554a81",
+    "email": "souvik@gmail.com",
+    "eventType": "sign_in",
+    "action": "login",
+    "ipAddress": "::1",
+    "location": {
+      "city": "Localhost",
+      "region": "Local",
+      "country": "Local",
+      "timezone": "Asia/Calcutta",
+      "source": "local"
+    },
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36",
+    "createdAt": "2026-04-29T05:31:54.530Z"
   }
 ]

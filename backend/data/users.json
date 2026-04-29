@@ -24,5 +24,31 @@
     "lastSignOutAt": "2026-04-20T15:21:36.889Z",
     "lastLoginAt": "2026-04-20T15:22:18.966Z",
     "lastLogoutAt": "2026-04-20T15:21:36.889Z"
+  },
+  {
+    "_id": "98196cf3-4979-461e-a890-31671501525d",
+    "username": "user",
+    "email": "user@gmail.com",
+    "passwordHash": "$2b$10$DAKHSleKC7i9fpz8NT8BtebhLgn7OH9yCS9DEm0WldU0He5npWfjG",
+    "isActive": true,
+    "createdAt": "2026-04-22T09:52:00.249Z",
+    "updatedAt": "2026-04-22T09:52:00.249Z",
+    "lastSignInAt": "2026-04-22T09:52:00.249Z",
+    "lastSignOutAt": null,
+    "lastLoginAt": "2026-04-22T09:52:00.249Z",
+    "lastLogoutAt": null
+  },
+  {
+    "_id": "bb540f81-05a6-4761-9f31-395091554a81",
+    "username": "souvik_10",
+    "email": "souvik@gmail.com",
+    "passwordHash": "$2b$10$Vpkbts8UumAOxt6IZAfa..uTqmUjmuHJhxoC5FiyNA0Vc3MuJRxc6",
+    "isActive": true,
+    "createdAt": "2026-04-29T05:31:28.730Z",
+    "updatedAt": "2026-04-29T05:31:54.527Z",
+    "lastSignInAt": "2026-04-29T05:31:54.527Z",
+    "lastSignOutAt": "2026-04-29T05:31:42.636Z",
+    "lastLoginAt": "2026-04-29T05:31:54.527Z",
+    "lastLogoutAt": "2026-04-29T05:31:42.636Z"
   }
 ]

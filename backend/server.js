@@ -3,10 +3,8 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
-import { ObjectId } from 'mongodb';
 import { randomUUID } from 'node:crypto';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
-import { connectDB, getDB } from './db.js';
 
 dotenv.config();
 
@@ -14,15 +12,6 @@ const app = express();
 const port = Number(process.env.PORT || 5000);
 const jwtSecret = process.env.JWT_SECRET;
 const isVercel = process.env.VERCEL === '1';
-const useFileStoreByEnv = ['1', 'true', 'yes', 'json', 'file'].includes(
-  String(process.env.USE_FILE_STORE || process.env.DATA_STORE || '')
-    .trim()
-    .toLowerCase()
-);
-let useFileStore = useFileStoreByEnv;
-let initialized = false;
-let initializePromise;
-
 const usersFilePath = new URL('./data/users.json', import.meta.url);
 const eventsFilePath = new URL('./data/auth_events.json', import.meta.url);
 
@@ -30,9 +19,22 @@ if (!jwtSecret) {
   throw new Error('JWT_SECRET is missing in backend/.env');
 }
 
+const allowedOrigins = new Set([
+  'http://localhost:5173',
+  process.env.CLIENT_URL,
+  process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : null
+].filter(Boolean));
+
 app.use(
   cors({
-    origin: ['http://localhost:5173'],
+    origin: (origin, callback) => {
+      if (!origin || allowedOrigins.has(origin)) {
+        callback(null, true);
+        return;
+      }
+
+      callback(new Error('Not allowed by CORS'));
+    },
     credentials: true
   })
 );
@@ -69,6 +71,7 @@ const getClientIp = (req) => {
   if (typeof forwardedFor === 'string' && forwardedFor.length > 0) {
     return forwardedFor.split(',')[0].trim();
   }
+
   return req.socket?.remoteAddress || 'unknown';
 };
 
@@ -122,7 +125,7 @@ const resolveLocation = async (ipAddress) => {
 const createToken = (user) => {
   return jwt.sign(
     {
-      userId: user._id.toString(),
+      userId: user._id,
       email: user.email,
       username: user.username
     },
@@ -131,84 +134,85 @@ const createToken = (user) => {
   );
 };
 
-const toUserIdString = (id) => (typeof id === 'string' ? id : id.toString());
+const normalizeDateValue = (value) => {
+  if (!value) {
+    return null;
+  }
+
+  return value instanceof Date ? value.toISOString() : String(value);
+};
+
+const normalizeUserRecord = (user) => ({
+  ...user,
+  _id: String(user._id || randomUUID()),
+  username: String(user.username || '').trim(),
+  email: String(user.email || '').trim().toLowerCase(),
+  isActive: Boolean(user.isActive),
+  createdAt: normalizeDateValue(user.createdAt),
+  updatedAt: normalizeDateValue(user.updatedAt),
+  lastSignInAt: normalizeDateValue(user.lastSignInAt),
+  lastSignOutAt: normalizeDateValue(user.lastSignOutAt),
+  lastLoginAt: normalizeDateValue(user.lastLoginAt),
+  lastLogoutAt: normalizeDateValue(user.lastLogoutAt)
+});
+
+const publicUser = (user) => ({
+  id: String(user._id),
+  username: user.username,
+  email: user.email,
+  isActive: user.isActive,
+  createdAt: user.createdAt,
+  lastLoginAt: user.lastLoginAt,
+  lastLogoutAt: user.lastLogoutAt,
+  lastSignInAt: user.lastSignInAt,
+  lastSignOutAt: user.lastSignOutAt
+});
 
 const findUserByEmail = async (email) => {
-  if (useFileStore) {
-    const users = await readJsonArray(usersFilePath);
-    return users.find((user) => user.email === email) || null;
-  }
-
-  const db = getDB();
-  return db.collection('users').findOne({ email });
-};
-
-const insertUserRecord = async (payload) => {
-  if (useFileStore) {
-    const users = await readJsonArray(usersFilePath);
-    const user = {
-      _id: randomUUID(),
-      ...payload
-    };
-    users.push(user);
-    await writeJsonArray(usersFilePath, users);
-    return user;
-  }
-
-  const db = getDB();
-  const result = await db.collection('users').insertOne(payload);
-  return { _id: result.insertedId, ...payload };
-};
-
-const updateUserById = async (userId, updateFields) => {
-  if (useFileStore) {
-    const users = await readJsonArray(usersFilePath);
-    const nextUsers = users.map((user) =>
-      toUserIdString(user._id) === toUserIdString(userId)
-        ? { ...user, ...updateFields }
-        : user
-    );
-    await writeJsonArray(usersFilePath, nextUsers);
-    return;
-  }
-
-  const db = getDB();
-  await db.collection('users').updateOne(
-    { _id: new ObjectId(toUserIdString(userId)) },
-    {
-      $set: updateFields
-    }
-  );
+  const users = await readJsonArray(usersFilePath);
+  return users.find((user) => user.email === email) || null;
 };
 
 const findUserById = async (userId) => {
-  if (useFileStore) {
-    const users = await readJsonArray(usersFilePath);
-    return users.find((user) => toUserIdString(user._id) === toUserIdString(userId)) || null;
-  }
+  const users = await readJsonArray(usersFilePath);
+  return users.find((user) => String(user._id) === String(userId)) || null;
+};
 
-  const db = getDB();
-  return db.collection('users').findOne(
-    { _id: new ObjectId(toUserIdString(userId)) },
-    {
-      projection: {
-        passwordHash: 0
-      }
+const insertUserRecord = async (payload) => {
+  const users = await readJsonArray(usersFilePath);
+  const user = normalizeUserRecord({
+    _id: randomUUID(),
+    ...payload
+  });
+
+  users.push(user);
+  await writeJsonArray(usersFilePath, users);
+  return user;
+};
+
+const updateUserById = async (userId, updateFields) => {
+  const users = await readJsonArray(usersFilePath);
+  const nextUsers = users.map((user) => {
+    if (String(user._id) !== String(userId)) {
+      return user;
     }
-  );
+
+    return normalizeUserRecord({
+      ...user,
+      ...updateFields,
+      _id: user._id
+    });
+  });
+
+  await writeJsonArray(usersFilePath, nextUsers);
 };
 
 const findEventsByEmail = async (email, limit = 50) => {
-  if (useFileStore) {
-    const events = await readJsonArray(eventsFilePath);
-    return events
-      .filter((event) => event.email === email)
-      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-      .slice(0, limit);
-  }
-
-  const db = getDB();
-  return db.collection('auth_events').find({ email }).sort({ createdAt: -1 }).limit(limit).toArray();
+  const events = await readJsonArray(eventsFilePath);
+  return events
+    .filter((event) => event.email === email)
+    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+    .slice(0, limit);
 };
 
 const authRequired = (req, res, next) => {
@@ -229,69 +233,30 @@ const authRequired = (req, res, next) => {
 };
 
 const writeAuthEvent = async ({ userId, email, eventType, action, ipAddress, location, userAgent }) => {
-  const createdAt = new Date();
-
-  if (useFileStore) {
-    const events = await readJsonArray(eventsFilePath);
-    events.push({
-      _id: randomUUID(),
-      userId: toUserIdString(userId),
-      email,
-      eventType,
-      action,
-      ipAddress,
-      location,
-      userAgent,
-      createdAt
-    });
-    await writeJsonArray(eventsFilePath, events);
-    return;
-  }
-
-  const db = getDB();
-  await db.collection('auth_events').insertOne({
-    userId: new ObjectId(toUserIdString(userId)),
+  const events = await readJsonArray(eventsFilePath);
+  events.push({
+    _id: randomUUID(),
+    userId: String(userId),
     email,
     eventType,
     action,
     ipAddress,
     location,
     userAgent,
-    createdAt
+    createdAt: new Date().toISOString()
   });
+  await writeJsonArray(eventsFilePath, events);
 };
 
 const initializeDataStore = async () => {
-  if (initialized) {
-    return;
+  if (!initializeDataStore.promise) {
+    initializeDataStore.promise = (async () => {
+      await ensureFileStore();
+      console.log('Using local JSON datastore.');
+    })();
   }
 
-  if (initializePromise) {
-    await initializePromise;
-    return;
-  }
-
-  initializePromise = (async () => {
-    if (useFileStoreByEnv) {
-      useFileStore = true;
-      await ensureFileStore();
-      console.log('Using local JSON datastore (forced by env).');
-      initialized = true;
-      return;
-    }
-
-    try {
-      await connectDB();
-      console.log('Connected to MongoDB Atlas');
-    } catch (error) {
-      useFileStore = true;
-      await ensureFileStore();
-      console.warn(`Atlas unavailable (${error.message}). Using local JSON datastore.`);
-    }
-    initialized = true;
-  })();
-
-  await initializePromise;
+  await initializeDataStore.promise;
 };
 
 app.use(async (_req, _res, next) => {
@@ -313,6 +278,7 @@ const handleSignIn = async (req, res) => {
 
     const normalizedEmail = String(email).trim().toLowerCase();
     const user = await findUserByEmail(normalizedEmail);
+
     if (!user) {
       return res.status(401).json({ message: 'Invalid email or password' });
     }
@@ -322,7 +288,7 @@ const handleSignIn = async (req, res) => {
       return res.status(401).json({ message: 'Invalid email or password' });
     }
 
-    const now = new Date();
+    const now = new Date().toISOString();
     await updateUserById(user._id, {
       isActive: true,
       updatedAt: now,
@@ -349,7 +315,7 @@ const handleSignIn = async (req, res) => {
       message: 'Signed in successfully',
       token,
       user: {
-        id: user._id.toString(),
+        id: String(user._id),
         username: user.username,
         email: user.email,
         lastLoginAt: now
@@ -363,7 +329,7 @@ const handleSignIn = async (req, res) => {
 const handleSignOut = async (req, res) => {
   try {
     const userId = req.user.userId;
-    const now = new Date();
+    const now = new Date().toISOString();
 
     await updateUserById(userId, {
       isActive: false,
@@ -414,7 +380,7 @@ app.post('/api/auth/sign-up', async (req, res) => {
     }
 
     const passwordHash = await bcrypt.hash(password, 10);
-    const now = new Date();
+    const now = new Date().toISOString();
 
     const user = await insertUserRecord({
       username: String(username).trim(),
@@ -429,12 +395,11 @@ app.post('/api/auth/sign-up', async (req, res) => {
       lastLogoutAt: null
     });
 
-    const userId = user._id;
     const ipAddress = getClientIp(req);
     const location = await resolveLocation(ipAddress);
 
     await writeAuthEvent({
-      userId,
+      userId: user._id,
       email: normalizedEmail,
       eventType: 'sign_in',
       action: 'login',
@@ -449,7 +414,7 @@ app.post('/api/auth/sign-up', async (req, res) => {
       message: 'User registered successfully',
       token,
       user: {
-        id: userId.toString(),
+        id: String(user._id),
         username: user.username,
         email: user.email,
         lastLoginAt: now
@@ -461,11 +426,8 @@ app.post('/api/auth/sign-up', async (req, res) => {
 });
 
 app.post('/api/auth/sign-in', handleSignIn);
-
 app.post('/api/auth/login', handleSignIn);
-
 app.post('/api/auth/sign-out', authRequired, handleSignOut);
-
 app.post('/api/auth/logout', authRequired, handleSignOut);
 
 app.get('/api/auth/me', authRequired, async (req, res) => {
@@ -477,15 +439,7 @@ app.get('/api/auth/me', authRequired, async (req, res) => {
     }
 
     return res.json({
-      user: {
-        id: user._id.toString(),
-        username: user.username,
-        email: user.email,
-        isActive: user.isActive,
-        createdAt: user.createdAt,
-        lastLoginAt: user.lastLoginAt,
-        lastLogoutAt: user.lastLogoutAt
-      }
+      user: publicUser(user)
     });
   } catch (error) {
     return res.status(500).json({ message: 'Failed to get user session', error: error.message });
@@ -505,7 +459,7 @@ app.get('/api/auth/activity/:email', async (req, res) => {
       email,
       totalEvents: events.length,
       events: events.map((event) => ({
-        id: event._id.toString(),
+        id: String(event._id),
         eventType: event.eventType,
         action: event.action,
         ipAddress: event.ipAddress,
